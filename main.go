@@ -1,30 +1,65 @@
 package main
 
 import (
+	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
+	"net"
 	"net/http"
 )
 
+var clients = make(map[*net.Conn]bool) // 연결된 클라이언트들
+var broadcast = make(chan []byte)      // 모든 클라이언트에게 전송할 메시지 채널
+
 func main() {
-	http.ListenAndServe(":8080", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// gin 웹서버
+	r := gin.Default()
+	r.GET("/", func(c *gin.Context) {
+		http.ServeFile(c.Writer, c.Request, "index.html")
+	})
+
+	// websocket 핸들러 함수 설정
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {
-			// handle error
+			fmt.Println(err)
+			return
 		}
-		go func() {
-			defer conn.Close()
+		defer conn.Close()
 
-			for {
-				msg, op, err := wsutil.ReadClientData(conn)
-				if err != nil {
-					// handle error
-				}
-				err = wsutil.WriteServerMessage(conn, op, msg)
-				if err != nil {
-					// handle error
-				}
+		// 연결된 클라이언트를 clients 맵에 추가
+		clients[&conn] = true
+
+		for {
+			// 클라이언트로부터 메시지를 받고, broadcast 채널에 전송
+			msg, op, err := wsutil.ReadClientData(conn)
+			if err != nil {
+				fmt.Println(err)
+				break
 			}
-		}()
-	}))
+			broadcast <- msg
+			fmt.Printf("Received message %s (opcode: %d)\n", msg, op)
+		}
+
+		// 연결된 클라이언트를 clients 맵에서 제거
+		delete(clients, &conn)
+	})
+
+	// 브로드캐스트 핸들러 함수 설정
+	go func() {
+		for {
+			// broadcast 채널로부터 메시지를 받아서 모든 클라이언트에게 전송
+			msg := <-broadcast
+			for conn := range clients {
+				wsutil.WriteServerMessage(*conn, ws.OpText, msg)
+			}
+		}
+	}()
+
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		panic(err)
+	}
+
 }
