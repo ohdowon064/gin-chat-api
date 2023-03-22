@@ -13,19 +13,21 @@ var clients = make(map[*net.Conn]bool) // 연결된 클라이언트들
 var broadcast = make(chan []byte)      // 모든 클라이언트에게 전송할 메시지 채널
 
 func main() {
+	// ServeMux 생성
+	mux := http.NewServeMux()
+
 	// gin 웹서버
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/index.html")
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
-
-	// handshake error: bad "Upgrade" header 에러 때문에 추가
-	// Upgrade 헤더설정
+	mux.Handle("/", r)
 
 	// websocket 핸들러 함수 설정
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
+		fmt.Println("websocket connected:", conn)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -66,8 +68,7 @@ func main() {
 		}
 	}()
 
-	r.Run()
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		panic(err)
 	}
