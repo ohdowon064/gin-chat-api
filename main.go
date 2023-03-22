@@ -15,9 +15,13 @@ var broadcast = make(chan []byte)      // 모든 클라이언트에게 전송할
 func main() {
 	// gin 웹서버
 	r := gin.Default()
+	r.LoadHTMLGlob("templates/index.html")
 	r.GET("/", func(c *gin.Context) {
-		http.ServeFile(c.Writer, c.Request, "index.html")
+		c.HTML(http.StatusOK, "index.html", nil)
 	})
+
+	// handshake error: bad "Upgrade" header 에러 때문에 추가
+	// Upgrade 헤더설정
 
 	// websocket 핸들러 함수 설정
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -52,11 +56,17 @@ func main() {
 			// broadcast 채널로부터 메시지를 받아서 모든 클라이언트에게 전송
 			msg := <-broadcast
 			for conn := range clients {
-				wsutil.WriteServerMessage(*conn, ws.OpText, msg)
+				err := wsutil.WriteServerMessage(*conn, ws.OpText, msg)
+				if err != nil {
+					fmt.Println(err)
+					(*conn).Close()
+					delete(clients, conn)
+				}
 			}
 		}
 	}()
 
+	r.Run()
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		panic(err)
