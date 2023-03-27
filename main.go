@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-var clients = make(map[*net.Conn]string)     // 연결된 클라이언트들
+var clients = make(map[string][]*net.Conn)   // 연결된 클라이언트들
 var broadcast = make(map[string]chan []byte) // 모든 클라이언트에게 전송할 메시지 채널
 
 func main() {
