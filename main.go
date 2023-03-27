@@ -20,6 +20,17 @@ func main() {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
 
+	r.POST("/rooms", func(c *gin.Context) {
+		// 채팅방 생성
+		name := c.PostForm("name")
+		chatRoom := CreateChatRoom(name)
+		c.JSON(http.StatusOK, chatRoom)
+	})
+
+	r.GET("/rooms", func(c *gin.Context) {
+		c.JSON(http.StatusOK, ChatRooms)
+	})s
+
 	// websocket 핸들러 함수 설정
 	mux.HandleFunc("/ws", ReceiveFromClient)
 
