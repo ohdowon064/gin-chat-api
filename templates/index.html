@@ -7,10 +7,17 @@
 <body>
 <div id="messages"></div>
 <form>
+    <h1>Chat Room List</h1>
+    <ul id="roomList"></ul>
     <input type="text" id="message" />
     <button type="submit">Send</button>
 </form>
 <script>
+    fetch("/rooms")
+        .then(response => response.text())
+        .then(html => {
+            document.querySelector("#roomList").innerHTML = html;
+        })
     var messages = document.getElementById("messages");
     var messageInput = document.getElementById("message");
     var socket = new WebSocket("ws://" + location.host + "/ws");

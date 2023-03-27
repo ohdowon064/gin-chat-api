@@ -29,10 +29,10 @@ func main() {
 
 	r.GET("/rooms", func(c *gin.Context) {
 		c.JSON(http.StatusOK, ChatRooms)
-	})s
+	})
 
 	// websocket 핸들러 함수 설정
-	mux.HandleFunc("/ws", ReceiveFromClient)
+	mux.HandleFunc("/ws/:roomId", ReceiveFromClient)
 
 	// 브로드캐스트 핸들러 함수 설정
 	go BroadcastToClient()
