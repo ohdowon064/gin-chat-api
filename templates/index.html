@@ -8,15 +8,22 @@
 <div id="messages"></div>
 <form>
     <h1>Chat Room List</h1>
-    <ul id="roomList"></ul>
+    <ol id="roomList"></ol>
     <input type="text" id="message" />
     <button type="submit">Send</button>
 </form>
 <script>
+    let rooms = []
     fetch("/rooms")
-        .then(response => response.text())
-        .then(html => {
-            document.querySelector("#roomList").innerHTML = html;
+        .then(response => response.json())
+        .then(data => {
+            const roomList = document.querySelector("#roomList")
+            data.forEach(room => {
+                const roomItem = document.createElement("li");
+                roomItem.textContent = room.name;
+                roomList.appendChild(roomItem);
+                rooms.push(room)
+            })
         })
     var messages = document.getElementById("messages");
     var messageInput = document.getElementById("message");

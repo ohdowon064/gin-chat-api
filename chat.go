@@ -12,7 +12,10 @@ type User struct {
 	Name string `json:"name"`
 }
 
-var ChatRooms []ChatRoom
+var ChatRooms = []ChatRoom{
+	{ID: "1", Name: "test"},
+	{ID: "2", Name: "test2"},
+}
 var ChatRoomToUser map[ChatRoom]User
 var UserToChatRoom map[User]ChatRoom
 
