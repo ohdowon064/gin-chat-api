@@ -10,18 +10,15 @@ import (
 func BroadcastToClient() {
 	for {
 		// broadcast 채널로부터 메시지를 받아서 모든 클라이언트에게 전송
-		for _, chatRoom := range ChatRooms {
-			msg := <-broadcast[chatRoom.ID]
-			for conn := range clients {
-				if clients[conn] != chatRoom.ID {
-					continue
-				}
-				err := wsutil.WriteServerMessage(*conn, ws.OpText, msg)
-				if err != nil {
-					fmt.Println(err)
-					(*conn).Close()
-					delete(clients, conn)
-				}
+		for conn := range clients {
+			msg := <-broadcast[clients[conn]]
+			fmt.Println(conn, msg)
+
+			err := wsutil.WriteServerMessage(*conn, ws.OpText, msg)
+			if err != nil {
+				fmt.Println(err)
+				(*conn).Close()
+				delete(clients, conn)
 			}
 		}
 	}
@@ -44,6 +41,7 @@ func ReceiveFromClient(w http.ResponseWriter, r *http.Request) {
 	for {
 		// 클라이언트로부터 메시지를 받고, broadcast 채널에 전송
 		msg, op, err := wsutil.ReadClientData(conn)
+		fmt.Println("received message:", msg)
 		if err != nil {
 			fmt.Println(err)
 			break

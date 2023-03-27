@@ -12,6 +12,8 @@ var broadcast = make(map[string]chan []byte) // 모든 클라이언트에게 전
 func main() {
 	// ServeMux 생성
 	mux := http.NewServeMux()
+	broadcast["1"] = make(chan []byte)
+	broadcast["2"] = make(chan []byte)
 
 	// gin 웹서버
 	r := gin.Default()
@@ -28,6 +30,7 @@ func main() {
 		// 채팅방 생성
 		name := c.PostForm("name")
 		chatRoom := CreateChatRoom(name)
+		broadcast[chatRoom.ID] = make(chan []byte)
 		c.JSON(http.StatusOK, chatRoom)
 	})
 
