@@ -23,6 +23,8 @@ func BroadcastToClient() {
 }
 
 func ReceiveFromClient(w http.ResponseWriter, r *http.Request) {
+	roomId := r.URL.Query()["rooms"][0]
+
 	conn, _, _, err := ws.UpgradeHTTP(r, w)
 	fmt.Println("websocket connected:", conn)
 	if err != nil {
@@ -32,7 +34,7 @@ func ReceiveFromClient(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	// 연결된 클라이언트를 clients 맵에 추가
-	clients[&conn] = true
+	clients[&conn] = roomId
 
 	for {
 		// 클라이언트로부터 메시지를 받고, broadcast 채널에 전송

@@ -11,9 +11,12 @@
     <button type="submit">Send</button>
 </form>
 <script>
+    const roomId = "{{.RoomId}}"
     var messages = document.getElementById("messages");
     var messageInput = document.getElementById("message");
-    var socket = new WebSocket("ws://" + location.host + "/ws");
+    const link = "ws://" + location.host + `/ws?rooms=${roomId}`
+    console.log(link)
+    var socket = new WebSocket(link);
 
     socket.onmessage = function(event) {
         var message = event.data;

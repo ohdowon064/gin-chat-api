@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net"
 	"net/http"
 )
 
-var clients = make(map[*net.Conn]bool) // 연결된 클라이언트들
-var broadcast = make(chan []byte)      // 모든 클라이언트에게 전송할 메시지 채널
+var clients = make(map[*net.Conn]string) // 연결된 클라이언트들
+var broadcast = make(chan []byte)        // 모든 클라이언트에게 전송할 메시지 채널
 
 func main() {
 	// ServeMux 생성
@@ -22,8 +21,7 @@ func main() {
 	})
 	r.GET("/rooms/:roomId", func(c *gin.Context) {
 		roomId := c.Param("roomId")
-		fmt.Println(roomId)
-		c.HTML(http.StatusOK, "chat.html", nil)
+		c.HTML(http.StatusOK, "chat.html", gin.H{"RoomId": roomId})
 	})
 
 	r.POST("/rooms", func(c *gin.Context) {
