@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net"
 	"net/http"
@@ -15,9 +16,14 @@ func main() {
 
 	// gin 웹서버
 	r := gin.Default()
-	r.LoadHTMLGlob("templates/index.html")
+	r.LoadHTMLGlob("templates/*")
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
+	})
+	r.GET("/rooms/:roomId", func(c *gin.Context) {
+		roomId := c.Param("roomId")
+		fmt.Println(roomId)
+		c.HTML(http.StatusOK, "chat.html", nil)
 	})
 
 	r.POST("/rooms", func(c *gin.Context) {
@@ -32,7 +38,7 @@ func main() {
 	})
 
 	// websocket 핸들러 함수 설정
-	mux.HandleFunc("/ws/:roomId", ReceiveFromClient)
+	mux.HandleFunc("/ws", ReceiveFromClient)
 
 	// 브로드캐스트 핸들러 함수 설정
 	go BroadcastToClient()

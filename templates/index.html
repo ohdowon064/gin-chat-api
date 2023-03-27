@@ -9,8 +9,6 @@
 <form>
     <h1>Chat Room List</h1>
     <ol id="roomList"></ol>
-    <input type="text" id="message" />
-    <button type="submit">Send</button>
 </form>
 <script>
     let rooms = []
@@ -21,27 +19,18 @@
             data.forEach(room => {
                 const roomItem = document.createElement("li");
                 roomItem.textContent = room.name;
+                const enterButton = document.createElement("button");
+                enterButton.textContent = "입장하기"
+                enterButton.onclick = () => {
+                    let link = `/rooms/${room.id}`
+                    console.log(link)
+                    window.location.href = link
+                }
+                roomItem.appendChild(enterButton)
                 roomList.appendChild(roomItem);
                 rooms.push(room)
             })
         })
-    var messages = document.getElementById("messages");
-    var messageInput = document.getElementById("message");
-    var socket = new WebSocket("ws://" + location.host + "/ws");
-
-    socket.onmessage = function(event) {
-        var message = event.data;
-        var messageNode = document.createElement("div");
-        messageNode.innerText = message;
-        messages.appendChild(messageNode);
-    };
-
-    document.querySelector("form").addEventListener("submit", function(event) {
-        event.preventDefault();
-        var message = messageInput.value;
-        socket.send(message);
-        messageInput.value = "";
-    });
 </script>
 </body>
 </html>
