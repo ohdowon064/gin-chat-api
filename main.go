@@ -41,7 +41,7 @@ func main() {
 	r.GET("/ws", ReceiveFromClient)
 
 	// 브로드캐스트 핸들러 함수 설정
-	go BroadcastToClient()
+	//go BroadcastToClient()
 
 	r.Run(":8080")
 

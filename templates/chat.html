@@ -14,7 +14,7 @@
     const roomId = "{{.RoomId}}"
     var messages = document.getElementById("messages");
     var messageInput = document.getElementById("message");
-    const link = "ws://" + location.host + `/ws?rooms=${roomId}`
+    const link = "ws://" + location.host + `/ws?roomId=${roomId}`
     console.log(link)
     var socket = new WebSocket(link);
 

@@ -8,40 +8,9 @@ import (
 	"net"
 )
 
-func broadcastToClient(roomId string, clientList []*net.Conn) {
-	msg := <-broadcast[roomId]
-	newStr := make([]byte, len(msg)) // 새로운 byte 배열을 만듦
-	copy(newStr, msg)                // 기존 문자열의 값을 새로운 배열에 복사
-
-	fmt.Println("broadcast message:", msg)
-
-	for _, conn := range clientList {
-		fmt.Println(conn)
-		err := wsutil.WriteServerMessage(*conn, ws.OpText, newStr)
-		if err != nil {
-			fmt.Println(err)
-			(*conn).Close()
-			for i, c := range clientList {
-				if c == conn {
-					clients[roomId] = append(clients[roomId][:i], clients[roomId][i+1:]...)
-					break
-				}
-			}
-		}
-	}
-}
-
-func BroadcastToClient() {
-	for {
-		// broadcast 채널로부터 메시지를 받아서 모든 클라이언트에게 전송
-		for roomId, client := range clients {
-			go broadcastToClient(roomId, client)
-		}
-	}
-}
-
 func ReceiveFromClient(c *gin.Context) {
 	roomId := c.Query("roomId")
+	fmt.Println(roomId)
 
 	conn, _, _, err := ws.UpgradeHTTP(c.Request, c.Writer)
 	fmt.Println("websocket connected:", conn)
@@ -57,6 +26,7 @@ func ReceiveFromClient(c *gin.Context) {
 	}
 
 	clients[roomId] = append(clients[roomId], &conn)
+	fmt.Println(clients)
 
 	for {
 		// 클라이언트로부터 메시지를 받고, broadcast 채널에 전송
@@ -66,7 +36,21 @@ func ReceiveFromClient(c *gin.Context) {
 			fmt.Println(err)
 			break
 		}
-		broadcast[roomId] <- msg
+
+		for _, conn := range clients[roomId] {
+			fmt.Println(*conn)
+			err := wsutil.WriteServerMessage(*conn, ws.OpText, msg)
+			if err != nil {
+				fmt.Println(err)
+				(*conn).Close()
+				for i, c := range clients[roomId] {
+					if c == conn {
+						clients[roomId] = append(clients[roomId][:i], clients[roomId][i+1:]...)
+						break
+					}
+				}
+			}
+		}
 		fmt.Printf("Received message %s (opcode: %d)\n", msg, op)
 	}
 
