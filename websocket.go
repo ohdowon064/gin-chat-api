@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"net"
-	"net/http"
 )
 
 func broadcastToClient(roomId string, clientList []*net.Conn) {
@@ -40,10 +40,10 @@ func BroadcastToClient() {
 	}
 }
 
-func ReceiveFromClient(w http.ResponseWriter, r *http.Request) {
-	roomId := r.URL.Query()["rooms"][0]
+func ReceiveFromClient(c *gin.Context) {
+	roomId := c.Query("roomId")
 
-	conn, _, _, err := ws.UpgradeHTTP(r, w)
+	conn, _, _, err := ws.UpgradeHTTP(c.Request, c.Writer)
 	fmt.Println("websocket connected:", conn)
 	if err != nil {
 		fmt.Println(err)

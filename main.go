@@ -11,7 +11,6 @@ var broadcast = make(map[string]chan []byte) // 모든 클라이언트에게 전
 
 func main() {
 	// ServeMux 생성
-	mux := http.NewServeMux()
 	broadcast["1"] = make(chan []byte)
 	broadcast["2"] = make(chan []byte)
 
@@ -39,15 +38,11 @@ func main() {
 	})
 
 	// websocket 핸들러 함수 설정
-	mux.HandleFunc("/ws", ReceiveFromClient)
+	r.GET("/ws", ReceiveFromClient)
 
 	// 브로드캐스트 핸들러 함수 설정
 	go BroadcastToClient()
 
-	mux.Handle("/", r)
-	err := http.ListenAndServe(":8080", mux)
-	if err != nil {
-		panic(err)
-	}
+	r.Run(":8080")
 
 }
