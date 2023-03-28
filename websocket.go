@@ -8,28 +8,34 @@ import (
 	"net/http"
 )
 
+func broadcastToClient(roomId string, clientList []*net.Conn) {
+	msg := <-broadcast[roomId]
+	newStr := make([]byte, len(msg)) // 새로운 byte 배열을 만듦
+	copy(newStr, msg)                // 기존 문자열의 값을 새로운 배열에 복사
+
+	fmt.Println("broadcast message:", msg)
+
+	for _, conn := range clientList {
+		fmt.Println(conn)
+		err := wsutil.WriteServerMessage(*conn, ws.OpText, newStr)
+		if err != nil {
+			fmt.Println(err)
+			(*conn).Close()
+			for i, c := range clientList {
+				if c == conn {
+					clients[roomId] = append(clients[roomId][:i], clients[roomId][i+1:]...)
+					break
+				}
+			}
+		}
+	}
+}
+
 func BroadcastToClient() {
 	for {
 		// broadcast 채널로부터 메시지를 받아서 모든 클라이언트에게 전송
 		for roomId, client := range clients {
-			msg := <-broadcast[roomId]
-			fmt.Println("broadcast message:", msg)
-			fmt.Println(client)
-
-			for _, conn := range client {
-				fmt.Println(conn)
-				err := wsutil.WriteServerMessage(*conn, ws.OpText, msg)
-				if err != nil {
-					fmt.Println(err)
-					(*conn).Close()
-					for i, c := range client {
-						if c == conn {
-							clients[roomId] = append(clients[roomId][:i], clients[roomId][i+1:]...)
-							break
-						}
-					}
-				}
-			}
+			go broadcastToClient(roomId, client)
 		}
 	}
 }
